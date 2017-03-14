@@ -1,9 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <string.h>
 
 #include "../headfiles/simplex.h"
+#include "../headfiles/dual.h"
 #include "../headfiles/interface.h"
+
+
 
 
 /* Receives a file name and a char vector for symbols
@@ -153,15 +157,47 @@ SIMPLEX *make_standard_form(const char *filename, char **symbols){
   return model;
 }
 
+typedef struct dic{
+  char new_iteration[110];
+  char lacking_file[50];
+  char infinite_opt[50];
+  char optimal_cost[50];
+  char var_val     [50];
+} DIC;
 
+void init_dict(DIC *dict){
+  strcpy(dict->new_iteration, " Voce gostaria de resolver o mesmo problema para um 'b' diferente? (s/n) ");
+  strcpy(dict->lacking_file, " Please, send me the name of a file as a parameter.\n");
+  strcpy(dict->infinite_opt,  " \n\n Infinite optimizatino.\n\n");
+  strcpy(dict->optimal_cost,  " \n Custo otimo eh: %.4lf\n");
+  strcpy(dict->var_val     ,  "\n Os valores das variaveis sao");
+}
 
+double read_d(){
+  double r;
+  scanf("%lf", &r);
+  getc(stdin);
+  return r;
+}
+
+void enter_vector(VECTOR *v){
+   int i;
+
+   printf(" Por favor, entre com o vetor a seguir (digite um numero seguido de um enter .. lembre-se de que o vetor b tem %d posicoes):\n", v->size);
+
+   for(i = 0; i < v->size; i++){
+    printf("    ");
+    access_vector(v, i) = read_d();
+   }
+}
 
 
 int main(int argc, char *argv[]){
-  int r;
-  int flag;
-  char *symbols;
+  int r, flag, is_dual = 0;
+  char *symbols, yn = 'n';
   SIMPLEX *model = NULL;
+  DIC dict;
+  init_dict(&dict);
 
   if(argc == 1){
     printf(" Please, send the name of a file as a parameter.\n");
@@ -170,17 +206,28 @@ int main(int argc, char *argv[]){
     flag = phase_I(model, symbols);
     if(flag) set_up_model_env(model);
 
-    r = simplex(model);
+    do{
+      r = is_dual ? dual(model) : simplex(model);
 
-    if(r == -1){
-      printf("\n\n Infinite optimization.\n\n");
-    } else if(r == 1) {
-      printf("\n Custo otimo eh: %.4lf\n", model->actual_cost);
-      printf("\n Os valores das variaveis sao: \n");
+      if(r == -1){
+        printf("\n\n Infinite optimization.\n\n");
+        break;
+      } else if(r == 1) {
+        printf("\n Custo otimo eh: %.4lf\n", model->actual_cost);
+        printf("\n Os valores das variaveis sao: \n");
 
-      for(int i = 0; i < model->matrix->col_qtd - model->new_cols; i++) printf(" X[%d] = %lf ", i, model->x->vector[i]);
-      printf("\n");
-    }
+        for(int i = 0; i < model->matrix->col_qtd - model->new_cols; i++) printf(" X[%d] = %lf ", i, model->x->vector[i]);
+        printf("\n");
+
+        // Checks whether user wants to run program with a different 'b' vector
+        printf("%s", dict.new_iteration);
+        scanf("%c", &yn);
+        getc(stdin);
+        if(yn == 's') enter_vector(model->b);
+        is_dual = !is_dual;
+        left_vet_mut(model->inv, model->b, model->x, NULL, model->basic_index);
+      }
+    } while(yn == 's');
     destroy_model(model);
   }
 

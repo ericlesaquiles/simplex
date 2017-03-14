@@ -36,10 +36,13 @@ void initialize_vector(VECTOR *a, double (*value)(int));
 void destroy_matrix(MAT *matrix);
 void destroy_vector(VECTOR *v);
 
+double ith_line_lth_column_mut(MAT *B, MAT *A, int i, int l);
 void mat_mut(MAT *A, MAT *B, MAT *C, int *a, int *b, int *c, int size);
 void mat_right_vet_mut(MAT * inv, MAT* mat, VECTOR *r, int i);
+void lth_mult_row(MAT *B, MAT *A, VECTOR *u, int l);
 void right_vet_mut(MAT *A, VECTOR *x, VECTOR *r);
 void left_vet_mut(MAT *A, VECTOR *x, VECTOR *r, int *v1_index, int *v2_index);
+void mat_left_vet_mut(MAT *A, MAT *C, VECTOR *r, int k, int *c_index, int *vr_index);
 void inverse(MAT *mat, int *basic_index, MAT *UL, MAT *inv);
 
 double mult_l_c(MAT *mat,  VECTOR *vet, int l, int offset);

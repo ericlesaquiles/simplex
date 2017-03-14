@@ -141,7 +141,7 @@ void right_vet_mut(MAT *A, VECTOR *x, VECTOR *r){
   }
 }
 
-// Yields, on u, the left multiplication of the ith column vector o matrix mat by matrix inv
+// Yields, on u, the left multiplication of the ith column vector of matrix mat by matrix inv
 void mat_right_vet_mut(MAT *inv, MAT* mat, VECTOR *r, int i){
   int j, k;
 
@@ -156,7 +156,7 @@ void mat_right_vet_mut(MAT *inv, MAT* mat, VECTOR *r, int i){
 
 
 
-// Left multiplies vector v, indexed by the index v_index, by matrix A
+// Left multiplies vector v, indexed by the index v_index, by matrix A (does v * A)
 // Puts result on r, indexed by v2_index
 // If some of the indices vectors are NULL, start from 0
 void left_vet_mut(MAT *A, VECTOR *v, VECTOR *r, int *v_index, int *vr_index){
@@ -221,6 +221,18 @@ void mat_left_vet_mut(MAT *A, MAT *C, VECTOR *r, int k, int *c_index, int *vr_in
 }
 
 
+// Makes u = lth row of B * A
+void lth_mult_row(MAT *B, MAT *A, VECTOR *u, int l){
+  int j, k, i;
+
+  for(i = 0; i < B->col_qtd; i++){
+    access_vector(u, i) = 0;
+    for(j = 0; j < A->row_qtd; j++){
+      access_vector(u, i) += access_matrix(j, i, A) * access_matrix(l, j, B);
+    }
+  }
+}
+
 
 
 void mat_mut(MAT *A, MAT *B, MAT *C, int *a, int *b, int *c, int size){
@@ -234,6 +246,16 @@ void mat_mut(MAT *A, MAT *B, MAT *C, int *a, int *b, int *c, int size){
       }
     }
   }
+}
+double ith_line_lth_column_mut(MAT *B, MAT *A, int i, int l){
+  int m;
+  double r = 0;
+
+  for(m = 0; m < A->col_qtd; m++){
+    r += access_matrix(l, m, B) * access_matrix(m, i, A);
+  }
+
+  return r;
 }
 
 double inner_product(VECTOR *v, VECTOR *u){

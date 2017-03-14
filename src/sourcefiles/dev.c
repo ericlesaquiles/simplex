@@ -1,3 +1,6 @@
+#ifndef __teste__
+#define __teste__
+
 #include <stdio.h>
 #include "../headfiles/matrix.h"
 
@@ -89,3 +92,4 @@ void print_initial(SIMPLEX *model){
   }
 }
 
+#endif

@@ -1,16 +1,19 @@
 #include "../headfiles/simplex.h"
 #include "../headfiles/interface.h"
 #include "../headfiles/matrix.h"
-#include "dev.c"
 
+double reduced_cost(SIMPLEX *model, VECTOR *p, int i){
+  return access_vector(model->cost, model->non_basic_index[i]) - mat_inner_product(model->matrix, p, model->non_basic_index[i]);
+
+}
 
 int get_reduced_cost_index(SIMPLEX *model, VECTOR *p){
   double c;
   int i;
 
   for(i = 0; i < model->matrix->col_qtd - model->basis_size; i++){
-    c = access_vector(model->cost, model->non_basic_index[i]) - mat_inner_product(model->matrix, p, model->non_basic_index[i]);
-    if(TESTE) printf(" Custo reduzido %d: %lf\n\n", i, c);
+    /*c = access_vector(model->cost, model->non_basic_index[i]) - mat_inner_product(model->matrix, p, model->non_basic_index[i]);*/
+    c = reduced_cost(model, p, i);
     if(c < 0){
       return i;
     }
@@ -18,8 +21,10 @@ int get_reduced_cost_index(SIMPLEX *model, VECTOR *p){
   return -1;
 }
 
-// Resolve um problema de programacao linear pelo algoritmo SIMPLEX, a partir do modelo presente em model
-// Retorna 1 quando encontra uma solucao otima, -1 quando encontra "otimizacao infinita"
+// Receives a feasible model for a linear programming problem matrix, basic and non-basic indices
+// basic inverse matrix, x vector, as well as cost vector and b vector all set accordingly
+// Runs the primal simplex method
+// Returns 1 if an optimal solution was found, -1 when an "infinite optimization" is found
 int simplex(SIMPLEX *model){
 
   int reduced_cost_index = 1, i, k;
@@ -36,18 +41,12 @@ int simplex(SIMPLEX *model){
   initialize_vector(u, nil_value);
 
   while(reduced_cost_index != -1){
-    print_all(model);
 
-    // Multiplies the inverse by the cost vector on the basic index and puts the result on p
+    // Multiplies the inverse by the cost vector on the basic index and puts the result on p (that is: p = cost * inv)
     left_vet_mut(model->inv, model->cost, p, model->basic_index, NULL);
-
-    printv("Vetor p: ", p);
 
     reduced_cost_index = get_reduced_cost_index(model, p);
     model->actual_cost = inner_product(model->cost, model->x);
-
-    if(TESTE) printf(" Custo atual: %.2lf\n\n", model->actual_cost);
-    if(TESTE) printf(" Entra na base: %d\n\n", reduced_cost_index);
 
     if(reduced_cost_index == -1){
         destroy_vector(p);
@@ -56,13 +55,11 @@ int simplex(SIMPLEX *model){
     } else {
       mat_right_vet_mut(model->inv, model->matrix, u, model->non_basic_index[reduced_cost_index]);
 
-      printv("Vetor u: ", u);
-
       for(i = 0; i < u->size; i++){
         if(u->vector[i] > 0) break;
       }
       // infinite optimization
-      if( i == u->size ){
+      if(i == u->size){
         destroy_vector(p);
         destroy_vector(u);
         return -1;
@@ -78,8 +75,6 @@ int simplex(SIMPLEX *model){
         if(j < min){
           min = j;
           k = i;
-          if(TESTE) printf(" Variavel a sair: %d \n\n", model->basic_index[k]);
-          if(TESTE) printf(" Theta minimo: %lf \n\n", j);
         }
       }
 
@@ -141,5 +136,4 @@ void destroy_model(SIMPLEX *model){
 
   free(index_r);
   free(index_c);
-
 }

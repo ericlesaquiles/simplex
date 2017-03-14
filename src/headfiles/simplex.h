@@ -44,8 +44,12 @@ typedef struct simplex{
   double actual_cost;
 } SIMPLEX;
 
+
+double reduced_cost(SIMPLEX *model, VECTOR *p, int i);
+
 int get_reduced_cost_index(SIMPLEX *model, VECTOR *p);
 int simplex(SIMPLEX *model);
+
 SIMPLEX *begin_simplex(char *nome);
 
 void destroy_model(SIMPLEX *model);
